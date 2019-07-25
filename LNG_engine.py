@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -----------------------------------------------------------------------------
-# LNG_auxiliar.py
+# LNG_engine.py
 # -----------------------------------------------------------------------------
 
 import numpy as np
 import os
 import math
-from scipy.spatial import Delaunay 
+from scipy.spatial import Delaunay
 import copy
 import matplotlib.pyplot as plt
 
@@ -60,13 +60,13 @@ def check_out_bound( point, sizeXYZ, equal = True):
 def create_points_t(c0,c1,c2, T, sizeXYZ, N):
     Nold, index, newp = N, [], []
     np.seterr(divide='ignore')
-    t_v = np.array([[(c1[2]-c0[2]),0.0,-(c1[0]-c0[0])], 
+    t_v = np.array([[(c1[2]-c0[2]),0.0,-(c1[0]-c0[0])],
                      [-(c1[2]-c0[2]),0.0,(c1[0]-c0[0])]])
     t_v = c1 + t_v*(T/(2.0*modeV(t_v[0])))  # point left and point right l01
 
-    t_vt = np.array([[(c2[2]-c1[2]),0.0,-(c2[0]-c1[0])], 
+    t_vt = np.array([[(c2[2]-c1[2]),0.0,-(c2[0]-c1[0])],
                      [-(c2[2]-c1[2]),0.0,(c2[0]-c1[0])]])
-    t_vt = c1 + t_vt*(T/(2.0*modeV(t_vt[0]))) #  point left and point right l12   
+    t_vt = c1 + t_vt*(T/(2.0*modeV(t_vt[0]))) #  point left and point right l12
     deltaX = [(c1[0]-c0[0]) == 0.0 , (c2[0]-c1[0]) == 0.0]
     index = np.ones((2,2),dtype=int)*-1
     if all(deltaX):
@@ -191,9 +191,9 @@ def create_points_t(c0,c1,c2, T, sizeXYZ, N):
                             else:
                                 index[j,i]= N
                             newp.append(p)
-                            N = N + 1   
+                            N = N + 1
     return newp, index, N, Nold
-        
+
 def gen_t_faces(index, edges, faces, N, Nold, i = 1):
     edges.extend([[a] for a in range(Nold, N)])
     face =  [[i-1],[i-1]]
@@ -212,10 +212,10 @@ def gen_t_faces(index, edges, faces, N, Nold, i = 1):
             if f[2] not in edges[i]:
                 edges[i].append(f[2])
             ff.append(i)
-            faces.append(ff)   
+            faces.append(ff)
     index = index[-2:]
     return index, edges, faces
- 
+
 def gen_thicknes_data(N, coord, t, sizeXYZ, edges):
 #    print('gen_t_coord(N, coord, t, sizeXYZ, edges) F // coco, edges, faces, N G')
     coco = []
@@ -235,7 +235,7 @@ def gen_thicknes_data(N, coord, t, sizeXYZ, edges):
         ind.extend(index)
         ind, edges, faces = gen_t_faces(ind, edges, faces, N, Nold, i)
     if (0 in edges[np.shape(coord)[0]-1]) or (int(np.shape(coord)[0]-1) in edges[0]):
-        c, index, N, Nold = create_points_t(coord[i],coord[i+1], coord[0], t, sizeXYZ, N)      
+        c, index, N, Nold = create_points_t(coord[i],coord[i+1], coord[0], t, sizeXYZ, N)
         coco.extend(c)
         ind.extend(index)
         ind, edges, faces = gen_t_faces(ind, edges, faces, N, Nold, i+1)
@@ -247,8 +247,8 @@ def gen_thicknes_data(N, coord, t, sizeXYZ, edges):
         ind.extend(index)
         ind, edges, faces = gen_t_faces(ind, edges, faces, N, Nold, i+1)
     coord = np.concatenate((coord, np.reshape(np.asarray(coco),(len(coco),3))))
-    return coord, edges, faces, N 
-        
+    return coord, edges, faces, N
+
 def gen_thickness_data(self):
     N, coord, t, sizeXYZ, edges = self.N(), self.nodes, self.t, self.sizeXYZ, self.edges
     coco, ind, faces= [[],[],[]]
@@ -266,7 +266,7 @@ def gen_thickness_data(self):
         ind.extend(index)
         ind, edges, faces = gen_t_faces(ind, edges, faces, N, Nold, i)
     if (0 in edges[np.shape(coord)[0]-1]) or (int(np.shape(coord)[0]-1) in edges[0]):
-        c, index, N, Nold = create_points_t(coord[i],coord[i+1], coord[0], t, sizeXYZ, N)      
+        c, index, N, Nold = create_points_t(coord[i],coord[i+1], coord[0], t, sizeXYZ, N)
         coco.extend(c)
         ind.extend(index)
         ind, edges, faces = gen_t_faces(ind, edges, faces, N, Nold, i+1)
@@ -326,7 +326,7 @@ def gen_mesh(self, meshSize):
                 self.edges[no].append(nedges[-1])
             if len(nedges)>=2:
                 for nn in nedges[0:-1]:
-                    self.edges[nn].append(nn+1)  
+                    self.edges[nn].append(nn+1)
     # Add new nodes to the node array
     self.nodes = np.concatenate((self.nodes, np.reshape(newc,(len(newc),3))))
     # TRIANGULATE faces if needed
@@ -334,7 +334,7 @@ def gen_mesh(self, meshSize):
         triang = Delaunay(self.nodes[:,[0,2]])
         self.faces = do_trimming(triang.simplices, self.bound_node)
 
-            
+
 def get_unique_sorted(column_matrix):
     l_cm = len(column_matrix)
     column_matrix=np.reshape(column_matrix,( l_cm,1))
@@ -392,10 +392,10 @@ def do_translate(tobetranslated, dictionary):
 def do_shapeME(self, coord, ii):
     def shape_(self,r):
         return np.zeros([1,3])
-       
+
     def shape_random(self,r, coef_rand =0.625):
         return np.random.uniform(-self.delmax/coef_rand,self.delmax/self.coef_rand,(1,3))
-           
+
     def shape_progressive(self,r):
         try:
             return np.array([float((self.I[0]+ii[r,0])**2), float((self.I[1]+ii[r,1])**2),  float((self.I[2]+ii[r,2])**2)])
@@ -404,22 +404,22 @@ def do_shapeME(self, coord, ii):
                 return np.array([float((self.I[0]+ii[r,0])**2), 0.0,  float((self.I[2]+ii[r,2])**2)])
             except:
                 return np.array([float((self.I[0]+ii[r,0])**2),0.0,0.0])
-           
+
     def shape_flower(self,r, a = 5.0, b = 0.3):
         self.TOT_angleX, self.TOT_angleY = 5*math.pi, 1.0
         xt = (a+z)*math.cos(self.TOT_angleX*self._fract_angleX)*math.sin(self.TOT_angleY*self._fract_angleY)-x
         yt = (a+z)*math.sin(self.TOT_angleX*self._fract_angleX)*math.sin(self.TOT_angleY*self._fract_angleY)-y
         zt = (a+z)*(math.cos(self.TOT_angleY*self._fract_angleY)+math.log(math.tan(0.5*self.TOT_angleY*self._fract_angleY)+0.1))+b*self.TOT_angleX*self._fract_angleX-z
         return np.array([xt,yt,zt])
-           
+
     def shape_ring(self,r, R = 25.0, Ri = 3.0):
         self.TOT_angleX, self.TOT_angleY = 2.0*math.pi, 2.0*math.pi
         xt = math.cos(self.TOT_angleX*self._fract_angleX)*(R+(Ri+z)*math.cos(self.TOT_angleY*self._fract_angleY))-x
         yt = math.sin(self.TOT_angleX*self._fract_angleX)*(R+(Ri+z)*math.cos(self.TOT_angleY*self._fract_angleY))-y
         zt = (Ri+z)*math.sin(self.TOT_angleY*self._fract_angleY)-z
         return np.array([xt,yt,zt])
-           
-    def shape_galaxy(self,r,aa= 3, a=1):
+
+    def shape_galaxy(self,r,aa= 3.5, a=5):
         self.TOT_angleX, self.TOT_angleY = 2*math.pi,4*math.pi
         xt = (a+z)*(aa+math.cos(self.TOT_angleY*self._fract_angleY/2)*math.sin(self.TOT_angleX*
                 self._fract_angleX)-math.sin(self.TOT_angleY*self._fract_angleY/2)*math.sin(2*
@@ -431,7 +431,7 @@ def do_shapeME(self, coord, ii):
                      self._fract_angleX)+math.cos(self.TOT_angleY*self._fract_angleY/2)*
                      math.sin(2*self.TOT_angleX*self._fract_angleX)) -  z
         return np.array([xt,yt,zt])
-           
+
     def shape_triplefris(self,r):
         self.TOT_angleX, self.TOT_angleY = math.pi, 3*math.pi
         xt = (1+z)*((math.cos(self.TOT_angleX*self._fract_angleX)*((1/3)*math.sqrt(2.0)*
@@ -448,45 +448,45 @@ def do_shapeME(self, coord, ii):
               math.sin(self.TOT_angleX*self._fract_angleX)*math.cos(self.TOT_angleX*self._fract_angleX)*math.sin(3*
                       self.TOT_angleY*self._fract_angleY)) - 1) - z
         return np.array([xt,yt,zt])
-           
+
     def shape_quadratic(self,r):
         xt = -0.5*x
         yt = 0
         zt = (0.005*(x-5)**2)
         return np.array([xt,yt,zt])
-           
+
     def shape_shell(self,r):
         xt = 0
         yt = 0
-        zt = (0.05*(x-self.delmax[0]*(self.n_G[0]*(self.n_L[0]-1))/2.0)**2) + (0.05*(y-self.delmax[1]*(self.n_G[1]*(self.n_L[1]-1))/2.0)**2)  
+        zt = (0.05*(x-self.delmax[0]*(self.n_G[0]*(self.n_L[0]-1))/2.0)**2) + (0.05*(y-self.delmax[1]*(self.n_G[1]*(self.n_L[1]-1))/2.0)**2)
         return np.array([xt,yt,zt])
-    
+
     def shape_circle(self,r, Ri = 3.0):
         self.TOT_angleX = 2*math.pi
         return shape_cylinder(self,r)
-    
-    def shape_cylinder(self,r,Ri = 3.0): 
-        
+
+    def shape_cylinder(self,r,Ri = 3.0):
+
         self.TOT_angleX = 2*math.pi
         xt = (z+Ri)*math.cos(self._fract_angleX*self.TOT_angleX)-x
         yt = 0
         zt = (z+Ri)*math.sin(self._fract_angleX*self.TOT_angleX)-z
         return np.array([xt,yt,zt])
-               
+
     def shape_catenoid(self,r,Ri = 5.0):
         self.TOT_angleX, self.TOT_angleY = 2*math.pi, math.pi
         xt = (z+Ri)*math.cos(self.TOT_angleX*self._fract_angleX-math.pi)*math.cosh(self.TOT_angleY*self._fract_angleY/Ri)-x
         yt = (z+Ri)*math.sin(self.TOT_angleX*self._fract_angleX-math.pi)*math.cosh(self.TOT_angleY*self._fract_angleY/Ri)-y
         zt = (self.TOT_angleY*self._fract_angleY)-z
         return np.array([xt,yt,zt])
-#            
+#
     def shape_sphere(self, r, Ri=3.0):
         self.TOT_angleX, self.TOT_angleY = 2*math.pi, math.pi
         xt = (z+Ri)*math.cos(self.TOT_angleX*self._fract_angleX)*math.sin(self.TOT_angleY*self._fract_angleY)-x
         yt = (z+Ri)*math.cos(self.TOT_angleY*self._fract_angleY)-y
         zt = (z+Ri)*math.sin(self.TOT_angleX*self._fract_angleX)*math.sin(self.TOT_angleY*self._fract_angleY)-z
         return np.array([xt,yt,zt])
-           
+
     def shape_NURBS(self,r):
         xt = 0
         yt = 0
@@ -494,9 +494,9 @@ def do_shapeME(self, coord, ii):
         +(0.005*(x-self.delmax[0]*(self.n_G[0]*(self.n_L[0]-1))/2.0)*(y-self.delmax[1]*(self.n_G[1]*(self.n_L[1]-1))/2.0))**2
         +(0.005*(x-self.delmax[0]*(self.n_G[0]*(self.n_L[0]-1))/2.0)*(y-self.delmax[1]*(self.n_G[1]*(self.n_L[1]-1))/2.0))
         return np.array([xt,yt,zt])
-   
+
     r = -1
- 
+
     for x,y,z in coord:
         r = r+1
         self._fract_angleX = float((float(self.I[0]*(self.n_L[0]-1)+ii[r,0]))/(self.n_G[0]*(self.n_L[0]-1)))

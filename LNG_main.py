@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -----------------------------------------------------------------------------
 # LNG_main.py
 # -----------------------------------------------------------------------------
@@ -12,14 +12,14 @@ import pylab as pl
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
-import LNG_engine 
-       
+import LNG_engine
+
 class RVE:
     def __init__(self, eletypeID = None, sizeXYZ=[1.0,0.0,1.0], t = 0.0):
         self.sizeXYZ = np.reshape(np.asarray(sizeXYZ), (1,3))
         self.bound_node = {}
         if eletypeID != None:
-            
+
             self._eletype = self._eletype(eletypeID)
         else: #Define your element
             self.eletypeID = eletypeID
@@ -46,7 +46,7 @@ class RVE:
         def e1(self):
             self.nodes = np.array([[1,0],[0,0],[1,1],[0,1]], dtype="float")
             self.edges = np.array([[0,1],[1,2],[2,3]])
-            self.sym = [0,2]    
+            self.sym = [0,2]
         def e3(self):
             self.nodes = np.array([[0,0],[0,0.5],[1,1]], dtype="float")
             self.edges = np.array([[0,1],[1,2]])
@@ -77,12 +77,31 @@ class RVE:
             self.faces = np.array([[]])
             self.sym = [0,1,2]
             self.dim = (0,1,2)
+        def e9(self): # octet-truss
+            self.nodes = np.array([[0,0,0],[1,1,0],[1,0,1],[0,1,1]], dtype="float")
+            self.edges = np.array([[0,1],[0,2],[0,3]])
+            self.faces = np.array([[]])
+            self.sym = [0,1,2]
+            self.dim = (0,1,2)
+        def e10(self): # octet-truss
+            self.nodes = np.array([[0,0,0],[1,0,1],[0,1,1],[1,1,1],[1,1,0]], dtype="float")
+            self.edges = np.array([[0,1],[0,2],[1,3],[2,3],[3,4],[0,4]])
+            self.faces = np.array([[]])
+            self.sym = [0,1,2]
+            self.dim = (0,1,2)
+        def e11(self): # octet-truss
+            self.nodes = np.array([[0,0,0],[1,0,1],[0,1,1],[1,1,1],[1,1,0]], dtype="float")
+            self.edges = np.array([[0,1],[0,2],[0,3],[0,4]])
+            self.faces = np.array([[]])
+            self.sym = [0,1,2]
+            self.dim = (0,1,2)
+
         #    print(' get_basic_elem( e F) // nodes, edges, faces, sym, dim G')
         try:
-            eval('e'+str(self.eletypeID)+'(self)')  
+            eval('e'+str(self.eletypeID)+'(self)')
         except:
             raise NameError('Element type %s is not defined.' %self.eletypeID)
-       
+
     def _get_input(self):
         if type(self.sizeXYZ)!= np.array:
             self.sizeXYZ = np.asmatrix(self.sizeXYZ)
@@ -100,19 +119,19 @@ class RVE:
         self.edges = T_edges
     #    print('get_input(coord, edges, faces, sizeXYZ, dim F) // coord, T_edges, N, scale G')
         assert np.sum(self.sizeXYZ!=0)==len(self.dim), ValueError('Element cell size (RVE.sizeXYZ) and element dimensions (self.dim) do not match: sizeXYZ=%s dim=%s'% (self.sizeXYZ, self.dim))
-    
+
     def _get_faces(self):
         Nn = self.N()
         LNG_engine.gen_thickness_data(self)
         self.bound_node = set(range(Nn, self.N() ))
-        
+
     def gen_mesh(self, meshSize):
         if meshSize != []:
             LNG_engine.gen_mesh(self, meshSize)
             print("RVE remeshed with a meshSize of {}, if you want to visualize it type {}.showmesh() ".format(meshSize, type(self).__name__))
         else:
             print("Lattice RVE not remeshed.")
-            
+
 
     def printDATA(self):
         for x in ['nodes', 'edges', 'faces']:
@@ -121,7 +140,7 @@ class RVE:
             except:
                 pass
     def show(self):
-        
+
         def show2F(self):
             pass
         def show2T(self):
@@ -132,10 +151,10 @@ class RVE:
             coll = PolyCollection(verts, hatch ='/',linestyle=':')
             ax.add_collection(coll)
             ax.autoscale_view()
-            plt.show()   
+            plt.show()
         def show3F(self):
             pass
-        
+
         eval('show'+str(len(self.dim))+str(bool(self.t))[0]+'(self)')
 
     def showmesh(self):
@@ -144,7 +163,7 @@ class RVE:
         plt.axis('off')
         plt.triplot(self.nodes[:,0], self.nodes[:,2], self.faces)
         plt.show()
-                
+
 class LatticeStructure:
     def __init__(self, _RVE, n_G=[1,1,1], shape=''):
         assert type(_RVE) == RVE, 'Please enter an RVE object'
@@ -152,7 +171,7 @@ class LatticeStructure:
         self.shape = shape
         self.RVE = _RVE
 
-    def gen_nodegrid(self):  
+    def gen_nodegrid(self):
         LNG_engine.check_dimensions(self)
         LNG_engine.do_pregrid(self)
         N = self.RVE.N()
@@ -218,7 +237,7 @@ class LatticeStructure:
                     [dx,dy,dz] = [np.float32(self.delmax[0]*i), np.float32(self.delmax[1]*j), np.float32(self.delmax[2]*k)]
                     LNG_engine.do_shapeME(self, coordS[iT,jT,kT]+[dx,dy,dz],self.iiS[iT,jT,kT])
                     self.num[p,:] = self.num_r
-                    index[self.num_r] = np.ones([len(self.num_r),1])        
+                    index[self.num_r] = np.ones([len(self.num_r),1])
         index = index.astype("bool")
         self.num = self.num.astype("int")
         self.nodes = self.nodes[index].astype("float32") #Take only the nodes of interest from the rectangular grid
@@ -232,7 +251,7 @@ class LatticeStructure:
             self._ind_hash[i] = k
         self.boundary = [LNG_engine.do_translate(list(b),  self._ind_hash) for b in self.boundary]
         del (self.bound, self.I)
-        
+
     def gen_edges(self):
         # Initializing global adjecency list
         self.edges =  [[a] for a in range(len(self._ind_hash))]
@@ -249,9 +268,9 @@ class LatticeStructure:
                     if (node_out not in self.edges[node_in])and(node_in not in self.edges[node_out]):
                         self.edges[node_in].append(node_out)
                         self.num_edges = self.num_edges + 1
-                        
+
     def gen_faces(self):
-        
+
         # Initializing global face list
         try:
             self.faces =  []
@@ -287,7 +306,7 @@ class LatticeStructure:
             for n1 in n0[1:]:
                 drawing.add(dxf.polyline([self.nodes[n0[0],self.RVE.dim], self.nodes[n1,self.RVE.dim]], layer = 'edges'))
         drawing.save()
-        if np.shape(self.faces)[1] != 0:
+        try:
             drawing = dxf.drawing( filename+'f'+'.dxf' )
             for face in self.faces:
                 f=[]
@@ -298,6 +317,7 @@ class LatticeStructure:
                 f['color'] = 7
                 drawing.add(f)
                 del(f)
+        except: pass
         drawing.save()
         os.chdir(parent_folder)
 
@@ -320,7 +340,7 @@ class LatticeStructure:
             os.remove(filename+'.pdf' )
             print("drawing '%s.pdf' replaced.\n" % filename)
         except:
-            print("drawing '%s.pdf' created.\n" % filename)        
+            print("drawing '%s.pdf' created.\n" % filename)
         for n0 in self.edges:
                 for n1 in n0[1:]:
                     lines.append((self.nodes[n0[0],self.RVE.dim], self.nodes[n1,self.RVE.dim]))
